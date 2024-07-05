@@ -1,0 +1,1 @@
+ alter table cart add column status enum("paid","wait") not null default "wait" after ProductID;
