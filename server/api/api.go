@@ -46,7 +46,7 @@ func (a *Api) Run() error {
 
 	userRepo := user.NewRepository(db.DB())
 	userService := user.NewService(userRepo, &Env)
-	userHandler := user.NewHandler(userService, *validate)
+	userHandler := user.NewHandler(userService, *validate, *middleware)
 	userHandler.RegisterRoute(middleware.App)
 
 	productRepo := product.NewRepository(db.DB())
