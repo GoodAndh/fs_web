@@ -113,3 +113,46 @@ func (r *repository) GetProductByUserID(ctx context.Context, userID int) ([]*Pro
 	}
 	return pr, nil
 }
+
+func (r *repository) CreateProductImage(ctx context.Context, img *ProductImage) error {
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, "insert into product_image(productID,Url,Captions) values(?,?,?)", img.ProductID, img.Url, img.Captions)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+func (r *repository) GetProductImage(ctx context.Context, productID int) ([]*ProductImage, error) {
+	pm := []*ProductImage{}
+	rows, err := r.db.QueryContext(ctx, "select id,productid,url,captions from product_image where productid = ?", productID)
+	if err != nil {
+		return []*ProductImage{}, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		pr := &ProductImage{}
+		err := rows.Scan(&pr.ID, &pr.Captions, &pr.Url, &pr.Captions)
+		if err != nil {
+			return []*ProductImage{}, err
+		}
+		pm = append(pm, pr)
+	}
+
+	return pm, nil
+}

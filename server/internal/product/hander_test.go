@@ -9,7 +9,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
@@ -195,6 +197,172 @@ func TestE2E(t *testing.T) {
 		fmt.Println("response:", resp)
 
 		assert.Equal(t, 200, resp.Status)
+	})
+
+}
+
+func TestProductImageE2E(t *testing.T) {
+	fiberApp, err := setUp()
+	if err != nil {
+		t.Fail()
+	}
+
+	logReq, err := http.NewRequest(http.MethodPost, baseURL+"signin", strings.NewReader(`{"username":"username","password":"password"}`))
+	if err != nil {
+		t.Fail()
+	}
+	logReq.Header.Add("Content-Type", "application/json")
+	logResponse, err := fiberApp.Test(logReq)
+	if err != nil {
+		t.Fail()
+	}
+	cookies := logResponse.Cookies()
+
+	t.Run("create image fail", func(t *testing.T) {
+
+		var buf bytes.Buffer
+
+		writer := multipart.NewWriter(&buf)
+
+		part, err := writer.CreateFormFile("file", "file_test.png")
+		if err != nil {
+			t.Fatalf("error create form file :%v", err)
+		}
+
+		file, err := os.Open("file_test.png")
+		if err != nil {
+			t.Fatalf("open file error:%v", err)
+		}
+		defer file.Close()
+
+		_, err = io.Copy(part, file)
+		if err != nil {
+			t.Fatalf("error copy file:%v", err)
+		}
+		writer.Close()
+		req, err := http.NewRequest(http.MethodPost, baseURL+"product/image/1", &buf)
+		if err != nil {
+			t.Fail()
+		}
+		req.Header.Add("Content-Type", "invalid content-type")
+
+		resp, err := fiberApp.Test(req)
+		if err != nil {
+			t.Fail()
+		}
+
+		byte, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fail()
+		}
+
+		var response utils.GlobalResponseError
+		if err := json.Unmarshal(byte, &response); err != nil {
+			t.Fail()
+		}
+		fmt.Println("Response:", response)
+		assert.Equal(t, 200, response.Status)
+
+	})
+
+	t.Run("create image success", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		writer := multipart.NewWriter(&buf)
+
+		part, err := writer.CreateFormFile("file", "file_test.png")
+		if err != nil {
+			t.Fatalf("error create form file :%v", err)
+		}
+
+		file, err := os.Open("file_test.png")
+		if err != nil {
+			t.Fatalf("open file error:%v", err)
+		}
+		defer file.Close()
+
+		_, err = io.Copy(part, file)
+		if err != nil {
+			t.Fatalf("error copy file:%v", err)
+		}
+		writer.Close()
+		req, err := http.NewRequest(http.MethodPost, baseURL+"product/image/1?url=contoh kedua&captions=caption test bro", &buf)
+		if err != nil {
+			t.Fail()
+		}
+		req.Header.Add("Content-Type", writer.FormDataContentType())
+		for _, cookie := range cookies {
+			req.AddCookie(cookie)
+		}
+		resp, err := fiberApp.Test(req)
+		if err != nil {
+			t.Fail()
+		}
+
+		byte, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fail()
+		}
+
+		var response utils.GlobalResponseError
+		if err := json.Unmarshal(byte, &response); err != nil {
+			t.Fail()
+		}
+		fmt.Println("Response:", response)
+		assert.Equal(t, 200, response.Status)
+
+	})
+
+	t.Run("get product image fail", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, baseURL+"product/image/50", nil)
+		if err != nil {
+			t.Fail()
+		}
+		req.Header.Add("Content-Type", "application/json")
+
+		respon, err := fiberApp.Test(req)
+		if err != nil {
+			t.Fail()
+		}
+		byte, err := io.ReadAll(respon.Body)
+		if err != nil {
+			t.Fail()
+		}
+
+		var response utils.GlobalResponseError
+		if err := json.Unmarshal(byte, &response); err != nil {
+			t.Fail()
+		}
+		fmt.Println("Response:", response)
+		assert.Equal(t, 401, response.Status)
+
+	})
+
+	t.Run("get image success", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, baseURL+"product/image/1", nil)
+		if err != nil {
+			t.Fail()
+		}
+		req.Header.Add("Content-Type", "application/json")
+		for _, cookie := range cookies {
+			req.AddCookie(cookie)
+		}
+
+		respon, err := fiberApp.Test(req)
+		if err != nil {
+			t.Fail()
+		}
+		byte, err := io.ReadAll(respon.Body)
+		if err != nil {
+			t.Fail()
+		}
+
+		var response utils.GlobalResponseError
+		if err := json.Unmarshal(byte, &response); err != nil {
+			t.Fail()
+		}
+		fmt.Println("Response:", response)
+		assert.Equal(t, 200, response.Status)
 	})
 
 }
