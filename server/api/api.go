@@ -27,13 +27,13 @@ func NewApi() *Api {
 }
 
 func (a *Api) Run() error {
-	fiberApp := fiber.New(fiber.Config{CaseSensitive: true, EnableSplittingOnParsers: true})
+	fiberApp := fiber.New(fiber.Config{CaseSensitive: true, EnableSplittingOnParsers: true, ErrorHandler: utils.PanicHandler})
 	api := fiberApp.Group("/api")
+	middleware := utils.Middleware(api, &Env)
 	api.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "Origin,Content-Type,Accept",
 	}))
-	middleware := utils.Middleware(api, &Env)
 
 	db, err := db.NewDatabase(&Env)
 	if err != nil {

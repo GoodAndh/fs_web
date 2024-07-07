@@ -8,8 +8,6 @@ import (
 )
 
 var (
-	Key ContextKey = "userID"
-
 	ErrNotFound error = errors.New("requested item not found")
 )
 
@@ -31,7 +29,6 @@ type (
 		Data    interface{} `json:"data"`
 	}
 
-	ContextKey string
 )
 
 func (x *XValidator) Validate(stx interface{}) []ErrorResponse {

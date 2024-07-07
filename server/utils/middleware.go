@@ -13,6 +13,11 @@ type MiddlewareStruct struct {
 	*config.Config
 }
 
+func PanicHandler(c *fiber.Ctx, e error) error {
+	c.Status(500)
+	return c.SendString("its not you but us")
+}
+
 func Middleware(app fiber.Router, c *config.Config) *MiddlewareStruct {
 	return &MiddlewareStruct{app, c}
 }
