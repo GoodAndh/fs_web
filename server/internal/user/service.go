@@ -97,11 +97,53 @@ func (s *service) LoginUsers(ctx context.Context, req *LoginUserRequest) (*Login
 		return &LoginUserResponse{}, err
 	}
 
-
 	return &LoginUserResponse{
 		accessToken: tokenString,
 		ID:          strconv.Itoa(user.ID),
 		Username:    user.Username,
 	}, nil
 
+}
+
+func (s *service) GetUserProfile(ctx context.Context, userID int) (*UserProfileResponse, error) {
+	c, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	userProfile, err := s.Repository.GetUserProfile(c, userID)
+	if err != nil {
+		if err == utils.ErrNotFound {
+			return &UserProfileResponse{}, fmt.Errorf("you dont have any profile")
+		}
+		return &UserProfileResponse{}, err
+	}
+
+	return &UserProfileResponse{
+		ID:       strconv.Itoa(userProfile.ID),
+		Url:      userProfile.Url,
+		Captions: userProfile.Captions,
+	}, nil
+}
+
+func (s *service) CreateUserProfile(ctx context.Context, req *CreateUserProfileRequest) (*UserProfileResponse, error) {
+	c, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	if _, err := s.Repository.GetUserProfile(c, req.UserID); err == nil {
+		return &UserProfileResponse{}, fmt.Errorf("you already have profile .do you mean update?")
+	}
+
+	id, err := s.Repository.CreateUserProfile(c, &UserProfile{
+		UserID:   req.UserID,
+		Url:      req.Url,
+		Captions: req.Captions,
+	})
+	if err != nil {
+		return &UserProfileResponse{}, err
+	}
+
+	return &UserProfileResponse{
+		ID:       strconv.Itoa(id),
+		Url:      req.Url,
+		Captions: req.Captions,
+	}, nil
 }
