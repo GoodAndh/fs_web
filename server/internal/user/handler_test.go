@@ -203,7 +203,7 @@ func setUp() (*fiber.App, error) {
 
 	userRepo := NewRepository(db.DB())
 	userService := NewService(userRepo, &Env)
-	userHandler := NewHandler(userService, *validate)
+	userHandler := NewHandler(userService, *validate,*middleware)
 	userHandler.RegisterRoute(middleware.App)
 
 	return &fiberApp, nil
