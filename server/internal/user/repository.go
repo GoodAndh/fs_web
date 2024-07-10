@@ -19,7 +19,6 @@ type repository struct {
 }
 
 func NewRepository(db DBTX) Repository {
-
 	return &repository{db: db}
 }
 
@@ -81,29 +80,30 @@ func (r *repository) CreateUsers(ctx context.Context, user *User) (int, error) {
 
 func (r *repository) GetUserProfile(ctx context.Context, userID int) (*UserProfile, error) {
 	us := &UserProfile{}
-	err := r.db.QueryRowContext(ctx, "select id,userID,url,captions from users_profile where userid=", userID).Scan(&us.ID, &us.UserID, &us.Url, &us.Captions)
+	err := r.db.QueryRowContext(ctx, "select id,userID,url,captions from users_profile where userid=?", userID).Scan(&us.ID, &us.UserID, &us.Url, &us.Captions)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return &UserProfile{}, utils.ErrNotFound
 		}
 		return &UserProfile{}, err
 	}
-
 	return us, nil
 }
 
-func (r *repository) CreateUserProfile(ctx context.Context, user *UserProfile) (int,error) {
+func (r *repository) CreateUserProfile(ctx context.Context, user *UserProfile) (int, error) {
+
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return 0,err
+		return 0, err
 	}
+
 	result, err := tx.ExecContext(ctx, "insert into users_profile(userid,url,captions) values(?,?,?)", user.UserID, user.Url, user.Captions)
 	if err != nil {
 		tx.Rollback()
-		return 0,err
+		return 0, err
 	}
 
-	id,err:=result.LastInsertId()
+	id, err := result.LastInsertId()
 	if err != nil {
 		tx.Rollback()
 		return 0, err
@@ -112,8 +112,29 @@ func (r *repository) CreateUserProfile(ctx context.Context, user *UserProfile) (
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return 0,err
+		return 0, err
 	}
 
-	return int(id),nil
+	return int(id), nil
+}
+
+func (r *repository) UpdateUserProfile(ctx context.Context, user *UserProfile) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, "update users_profile set url= ? ,captions = ? where userID =?", user.Url, user.Captions, user.UserID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
 }

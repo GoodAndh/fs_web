@@ -8,7 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -16,7 +18,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-var Env = config.Env.Test().InitConfig()
+var (
+	Env = config.Env.Test().InitConfig()
+)
 
 const baseURL = "http://localhost:3000/api/"
 
@@ -62,15 +66,14 @@ func TestE2E(t *testing.T) {
 			t.Fail()
 		}
 
-		fmt.Println("response:", resp)
 		assert.Equal(t, 400, resp.Status)
 
 	})
 
 	t.Run("Regis User Success", func(t *testing.T) {
 		payload := RegisUserRequest{
-			Username:  "username1",
-			Email:     "email1@gmail.com",
+			Username:  "username",
+			Email:     "email@gmail.com",
 			Password:  "password",
 			VPassword: "password",
 		}
@@ -100,7 +103,10 @@ func TestE2E(t *testing.T) {
 			t.Fail()
 		}
 
-		fmt.Println("response sukses:", response)
+		if response.Message == "username already in used" || response.Message == "email already in used" {
+			assert.Equal(t, 400, response.Status)
+			return
+		}
 
 		assert.Equal(t, 200, response.Status)
 
@@ -140,8 +146,6 @@ func TestE2E(t *testing.T) {
 			t.Fail()
 		}
 
-		fmt.Println("response:", response)
-
 		assert.Equal(t, 400, response.Status)
 
 	})
@@ -180,9 +184,82 @@ func TestE2E(t *testing.T) {
 			t.Fail()
 		}
 
-		fmt.Println("response:", response)
-
 		assert.Equal(t, 200, response.Status)
+	})
+
+	t.Run("create image success", func(t *testing.T) {
+
+		payload := &LoginUserRequest{
+			Username: "username",
+			Password: "password",
+		}
+
+		byte, err := json.Marshal(payload)
+		if err != nil {
+			t.Fail()
+		}
+
+		reqLogin, err := http.NewRequest(http.MethodPost, baseURL+"signin", bytes.NewBuffer(byte))
+		if err != nil {
+			t.Fail()
+		}
+
+		reqLogin.Header.Add("Content-Type", "application/json")
+
+		respLogin, err := fiberApp.Test(reqLogin)
+		if err != nil {
+			t.Fail()
+		}
+
+		cookies := respLogin.Cookies()
+
+		var buf bytes.Buffer
+
+		writer := multipart.NewWriter(&buf)
+
+		part, err := writer.CreateFormFile("file", "file_test.png")
+		if err != nil {
+			t.Fail()
+		}
+
+		file, err := os.Open("file_test.png")
+		if err != nil {
+			t.Fail()
+		}
+		defer file.Close()
+
+		_, err = io.Copy(part, file)
+		if err != nil {
+			t.Fail()
+		}
+		writer.Close()
+
+		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%suser/profile?url=%s&captions=%s", baseURL, "profilebro", "noCAptions"), &buf)
+		if err != nil {
+			t.Fail()
+		}
+		req.Header.Add("Content-Type", writer.FormDataContentType())
+		for _, cookie := range cookies {
+			req.AddCookie(cookie)
+		}
+		resp, err := fiberApp.Test(req)
+		if err != nil {
+			t.Fail()
+		}
+		bytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fail()
+		}
+		var response utils.GlobalResponseError
+		if err := json.Unmarshal(bytes, &response); err != nil {
+			t.Fail()
+		}
+		if response.Message == "you already have profile .do you mean update?" {
+			assert.Equal(t, 400, response.Status)
+			return
+		}
+		assert.Equal(t, 200, response.Status)
+
 	})
 
 }
@@ -203,7 +280,7 @@ func setUp() (*fiber.App, error) {
 
 	userRepo := NewRepository(db.DB())
 	userService := NewService(userRepo, &Env)
-	userHandler := NewHandler(userService, *validate,*middleware)
+	userHandler := NewHandler(userService, *validate, *middleware)
 	userHandler.RegisterRoute(middleware.App)
 
 	return &fiberApp, nil

@@ -14,6 +14,7 @@ type MiddlewareStruct struct {
 }
 
 func PanicHandler(c *fiber.Ctx, e error) error {
+	fmt.Println("error:",e)
 	c.Status(500)
 	return c.SendString("its not you but us")
 }

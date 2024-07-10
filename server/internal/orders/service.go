@@ -25,13 +25,22 @@ func (s *service) GetOrders(ctx context.Context, userID int) ([]*GetOrdersRespon
 	getO := []*GetOrdersResponse{}
 
 	status, err := s.repo.GetStatusByUserID(c, userID)
-	if err != nil || len(status) <= 0 {
+	if err != nil {
 		return []*GetOrdersResponse{}, err
 	}
 
+	if len(status) <= 0 {
+		return []*GetOrdersResponse{}, fmt.Errorf("you dont have any order yet")
+	}
+
 	items, err := s.repo.GetItemsByUserID(c, userID)
-	if err != nil || len(items) <= 0 {
+	if err != nil {
 		return []*GetOrdersResponse{}, err
+	}
+
+	if len(items) <= 0 {
+		return []*GetOrdersResponse{}, fmt.Errorf("you dont have any order yet")
+
 	}
 
 	for i, stats := range status {
@@ -59,6 +68,10 @@ func (s *service) GetOrders(ctx context.Context, userID int) ([]*GetOrdersRespon
 			Status:      stats.Status,
 		}
 		getO = append(getO, ord)
+	}
+
+	if len(getO) <= 0 {
+		return []*GetOrdersResponse{}, fmt.Errorf("you dont have any order yet")
 	}
 
 	return getO, nil

@@ -48,7 +48,6 @@ func TestE2E(t *testing.T) {
 		if err := json.Unmarshal(byte, &resp); err != nil {
 			t.Fail()
 		}
-		fmt.Println("response:", resp)
 		assert.Equal(t, 200, resp.Status)
 
 	})
@@ -72,7 +71,6 @@ func TestE2E(t *testing.T) {
 		if err := json.Unmarshal(byte, &resp); err != nil {
 			t.Fail()
 		}
-		fmt.Println("response:", resp)
 		assert.Equal(t, 200, resp.Status)
 
 	})
@@ -96,7 +94,6 @@ func TestE2E(t *testing.T) {
 		if err := json.Unmarshal(byte, &resp); err != nil {
 			t.Fail()
 		}
-		fmt.Println("response:", resp)
 		assert.Equal(t, 200, resp.Status)
 
 	})
@@ -130,7 +127,6 @@ func TestE2E(t *testing.T) {
 		if err := json.Unmarshal(byte, &resp); err != nil {
 			t.Fail()
 		}
-		fmt.Println("response:", resp)
 		assert.Equal(t, 401, resp.Status)
 
 	})
@@ -194,7 +190,6 @@ func TestE2E(t *testing.T) {
 		if err := json.Unmarshal(byte, &resp); err != nil {
 			t.Fail()
 		}
-		fmt.Println("response:", resp)
 
 		assert.Equal(t, 200, resp.Status)
 	})
@@ -260,7 +255,6 @@ func TestProductImageE2E(t *testing.T) {
 		if err := json.Unmarshal(byte, &response); err != nil {
 			t.Fail()
 		}
-		fmt.Println("Response:", response)
 		assert.Equal(t, 200, response.Status)
 
 	})
@@ -308,7 +302,6 @@ func TestProductImageE2E(t *testing.T) {
 		if err := json.Unmarshal(byte, &response); err != nil {
 			t.Fail()
 		}
-		fmt.Println("Response:", response)
 		assert.Equal(t, 200, response.Status)
 
 	})
@@ -333,7 +326,6 @@ func TestProductImageE2E(t *testing.T) {
 		if err := json.Unmarshal(byte, &response); err != nil {
 			t.Fail()
 		}
-		fmt.Println("Response:", response)
 		assert.Equal(t, 401, response.Status)
 
 	})
@@ -361,7 +353,6 @@ func TestProductImageE2E(t *testing.T) {
 		if err := json.Unmarshal(byte, &response); err != nil {
 			t.Fail()
 		}
-		fmt.Println("Response:", response)
 		assert.Equal(t, 200, response.Status)
 	})
 

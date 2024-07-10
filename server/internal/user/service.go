@@ -124,7 +124,7 @@ func (s *service) GetUserProfile(ctx context.Context, userID int) (*UserProfileR
 	}, nil
 }
 
-func (s *service) CreateUserProfile(ctx context.Context, req *CreateUserProfileRequest) (*UserProfileResponse, error) {
+func (s *service) CreateUserProfile(ctx context.Context, req *UserProfileRequest) (*UserProfileResponse, error) {
 	c, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
@@ -143,6 +143,31 @@ func (s *service) CreateUserProfile(ctx context.Context, req *CreateUserProfileR
 
 	return &UserProfileResponse{
 		ID:       strconv.Itoa(id),
+		Url:      req.Url,
+		Captions: req.Captions,
+	}, nil
+}
+
+func (s *service) UpdateUserProfile(ctx context.Context, req *UserProfileRequest) (*UpdateUserProfileResponse, error) {
+	c, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	if _, err := s.Repository.GetUserProfile(c, req.UserID); err != nil {
+		if err == utils.ErrNotFound {
+			return &UpdateUserProfileResponse{}, fmt.Errorf("you dont have any image yet,try create one")
+		}
+		return &UpdateUserProfileResponse{}, err
+	}
+
+	if err := s.Repository.UpdateUserProfile(c, &UserProfile{
+		UserID:   req.UserID,
+		Url:      req.Url,
+		Captions: req.Captions,
+	}); err != nil {
+		return &UpdateUserProfileResponse{}, err
+	}
+
+	return &UpdateUserProfileResponse{
 		Url:      req.Url,
 		Captions: req.Captions,
 	}, nil

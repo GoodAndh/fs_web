@@ -33,7 +33,6 @@ func databaseMySql(cfg mysql.Config) (*Database, error) {
 }
 
 func validate(env *config.Config) string {
-
 	if env.TestOrMain == "main" {
 		return env.DBName
 	} else {

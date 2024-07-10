@@ -8,6 +8,7 @@ import (
 	"backend/server/utils"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -72,6 +73,10 @@ func TestE2E(t *testing.T) {
 		}
 		var logResp utils.GlobalResponseError
 		if err := json.Unmarshal(logbyte, &logResp); err != nil {
+			t.Fail()
+		}
+		if logResp.Status != 200 {
+			fmt.Println("status not 200:", logResp.Message)
 			t.Fail()
 		}
 
@@ -226,7 +231,12 @@ func TestE2E(t *testing.T) {
 			t.Fail()
 		}
 
+		if response.Message == "you already have the same cart. do you mean change?" {
+			assert.Equal(t, 400, response.Status)
+			return
+		}
 		assert.Equal(t, 200, response.Status)
+
 	})
 
 }

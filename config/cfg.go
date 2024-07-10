@@ -51,11 +51,13 @@ func (c Config) InitConfig() Config {
 
 	if c.TestOrMain == "main" {
 		envPath = filepath.Join(dir, ".", ".env")
+		// envPath = filepath.Join(dir, "..", "..", "..", ".env")
+
 	}
 
 	if c.TestOrMain == "test" {
 		// envPath = filepath.Join(dir, ".", ".env")
-		envPath = filepath.Join(dir, "..","..","..", ".env")
+		envPath = filepath.Join(dir, "..", "..", "..", ".env")
 	}
 
 	if err := godotenv.Load(envPath); err != nil {
