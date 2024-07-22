@@ -138,3 +138,16 @@ func (r *repository) UpdateUserProfile(ctx context.Context, user *UserProfile) e
 
 	return nil
 }
+
+func (r *repository) GetUserByID(ctx context.Context, userID int) (*User, error) {
+	user := &User{}
+	err := r.db.QueryRowContext(ctx, "select id,username,email,password,created_at,last_updated from users where id = ?", userID).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.LastUpdated)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &User{}, utils.ErrNotFound
+		}
+		return &User{}, err
+	}
+
+	return user, nil
+}

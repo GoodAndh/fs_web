@@ -12,15 +12,16 @@ type Handler struct {
 	Service
 	utils.XValidator
 	*utils.MiddlewareStruct
+	fiber.Router
 }
 
-func NewHandler(s Service, x utils.XValidator, m *utils.MiddlewareStruct) *Handler {
-	return &Handler{s, x, m}
+func NewHandler(s Service, x utils.XValidator, m *utils.MiddlewareStruct,r fiber.Router) *Handler {
+	return &Handler{s, x, m,r}
 }
 
-func (h *Handler) RegisterRoute(router fiber.Router) {
-	router.Post("/order/create", h.MiddlewareWithJWT, h.createOrders)
-	router.Get("/order/", h.MiddlewareWithJWT, h.getOrders)
+func (h *Handler) RegisterRoute() {
+	h.Router.Post("/order/create", h.MiddlewareWithJWT, h.createOrders)
+	h.Router.Get("/order/", h.MiddlewareWithJWT, h.getOrders)
 }
 
 func (h *Handler) createOrders(c *fiber.Ctx) error {
@@ -40,12 +41,11 @@ func (h *Handler) createOrders(c *fiber.Ctx) error {
 	}
 	payload.UserID = userID
 
-	if errs := h.XValidator.Validate(&payload); len(errs) > 0 && errs[0].Error {
-		errMsg := make([]string, 0)
-		for _, err := range errs {
-			errMsg = append(errMsg, fmt.Sprintf("[%s:%v] need to implement '%s'", err.FailedField, err.Value, err.Tag))
-		}
-		return utils.WriteJson(c, 400, "failed field on :", errMsg)
+	
+	errs := h.XValidator.Validate(&payload)
+	if len(errs) > 0 {
+
+		return utils.WriteJson(c, 400, "failed field on :", errs)
 	}
 
 	response, err := h.Service.CreateOrders(c.Context(), &payload)

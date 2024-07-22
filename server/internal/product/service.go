@@ -3,8 +3,13 @@ package product
 import (
 	"backend/server/utils"
 	"context"
+	"errors"
 	"fmt"
 	"time"
+)
+
+var (
+	ErrMissingFile error = errors.New("missing file")
 )
 
 type service struct {

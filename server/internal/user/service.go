@@ -4,11 +4,18 @@ import (
 	"backend/config"
 	"backend/server/utils"
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+)
+
+var (
+	ErrUsernameAlrInUsed error = errors.New("username already in used")
+	ErrEmailAlrInUsed    error = errors.New("email already in used")
+	ErrMissingFile       error = errors.New("missing file")
 )
 
 type service struct {
@@ -30,11 +37,11 @@ func (s *service) CreateUsers(ctx context.Context, user *RegisUserRequest) (*Reg
 	defer cancel()
 
 	if _, err := s.Repository.GetUserByUsername(c, user.Username); err == nil {
-		return &RegisUserResponse{}, fmt.Errorf("username already in used")
+		return &RegisUserResponse{}, ErrUsernameAlrInUsed
 	}
 
 	if _, err := s.Repository.GetUserByEmail(c, user.Email); err == nil {
-		return &RegisUserResponse{}, fmt.Errorf("email already in used")
+		return &RegisUserResponse{}, ErrEmailAlrInUsed
 	}
 
 	hashed, err := utils.HashPassword(user.Password)
@@ -170,5 +177,23 @@ func (s *service) UpdateUserProfile(ctx context.Context, req *UserProfileRequest
 	return &UpdateUserProfileResponse{
 		Url:      req.Url,
 		Captions: req.Captions,
+	}, nil
+}
+
+func (s *service) GetUserByID(ctx context.Context, userID int) (*UserResponse, error) {
+	c, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	user, err := s.Repository.GetUserByID(c, userID)
+	if err != nil {
+		if err == utils.ErrNotFound {
+			return &UserResponse{}, fmt.Errorf("id not found")
+		}
+		return &UserResponse{}, err
+	}
+
+	return &UserResponse{
+		Username: user.Username,
+		Email:    user.Email,
 	}, nil
 }

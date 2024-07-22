@@ -12,16 +12,17 @@ type Handler struct {
 	Service
 	utils.XValidator
 	utils.MiddlewareStruct
+	fiber.Router
 }
 
-func NewHandler(s Service, x utils.XValidator, m utils.MiddlewareStruct) *Handler {
-	return &Handler{s, x, m}
+func NewHandler(s Service, x utils.XValidator, m utils.MiddlewareStruct,r fiber.Router) *Handler {
+	return &Handler{s, x, m,r}
 }
 
-func (h *Handler) RegisterRoute(router fiber.Router) {
-	router.Post("/cart/create/", h.MiddlewareWithJWT, h.createCart)
-	router.Post("/cart/update/", h.MiddlewareWithJWT, h.updateCart)
-	router.Get("/cart/", h.MiddlewareWithJWT, h.getCart)
+func (h *Handler) RegisterRoute() {
+	h.Router.Post("/cart/create/", h.MiddlewareWithJWT, h.createCart)
+	h.Router.Post("/cart/update/", h.MiddlewareWithJWT, h.updateCart)
+	h.Router.Get("/cart/", h.MiddlewareWithJWT, h.getCart)
 }
 
 func (h *Handler) createCart(c *fiber.Ctx) error {
@@ -42,15 +43,11 @@ func (h *Handler) createCart(c *fiber.Ctx) error {
 	}
 	req.UserID = userID
 
-	if errs := h.XValidator.Validate(&req); len(errs) > 0 && errs[0].Error {
-		errMsg := make([]string, 0)
-		for _, err := range errs {
-			if err.Value == "" {
-				err.Value = "empty value"
-			}
-			errMsg = append(errMsg, fmt.Sprintf("[%s:%v] need to implement '%s' ", err.FailedField, err.Value, err.Tag))
-		}
-		return utils.WriteJson(c, 400, "failed field on:", errMsg)
+	
+	errs := h.XValidator.Validate(&req)
+	if len(errs) > 0 {
+
+		return utils.WriteJson(c, 400, "failed field on :", errs)
 	}
 
 	response, err := h.Service.AddNewCart(c.Context(), &req)
@@ -77,13 +74,10 @@ func (h *Handler) updateCart(c *fiber.Ctx) error {
 	}
 	req.UserID = userID
 
-	if errs := h.XValidator.Validate(&req); len(errs) > 0 && errs[0].Error {
-		errMsg := make([]string, 0)
-		for _, err := range errs {
+	errs := h.XValidator.Validate(&req)
+	if len(errs) > 0 {
 
-			errMsg = append(errMsg, fmt.Sprintf("[%s:%v] need to implement '%s' ", err.FailedField, err.Value, err.Tag))
-		}
-		return utils.WriteJson(c, 400, "failed field on:", errMsg)
+		return utils.WriteJson(c, 400, "failed field on :", errs)
 	}
 
 	response, err := h.Service.UpdateCart(c.Context(), &req)

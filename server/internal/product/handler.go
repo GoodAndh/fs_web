@@ -15,19 +15,21 @@ type Handler struct {
 	Service
 	utils.XValidator
 	*utils.MiddlewareStruct
+	fiber.Router
 }
 
-func NewHandler(s Service, x utils.XValidator, m *utils.MiddlewareStruct) *Handler {
-	return &Handler{s, x, m}
+func NewHandler(s Service, x utils.XValidator, m *utils.MiddlewareStruct, r fiber.Router) *Handler {
+	return &Handler{s, x, m, r}
 }
 
-func (h *Handler) RegisterRoute(router fiber.Router) {
-	router.Post("/product/create", h.MiddlewareWithJWT, h.createProduct)
-	router.Get("/product", h.getAllProduct)
-	router.Get("/product/id/:id", h.getProductByID)
-	router.Get("/product/search/:name", h.getProductByName)
-	router.Post("/product/image/:id", h.MiddlewareWithJWT, h.createPIMG)
-	router.Get("/product/image/:id", h.MiddlewareWithJWT, h.getImage)
+func (h *Handler) RegisterRoute() {
+	h.Router.Post("/product/create", h.MiddlewareWithJWT, h.createProduct)
+	h.Router.Get("/product", h.getAllProduct)
+	h.Router.Get("/product/id/:id", h.getProductByID)
+	h.Router.Get("/product/search/:name", h.getProductByName)
+	h.Router.Post("/product/image/:id", h.MiddlewareWithJWT, h.createPIMG)
+	h.Router.Get("/product/image/:id", h.getImage)
+	h.Router.Get("/product/serveimg", h.serveImage)
 }
 
 func (h *Handler) createProduct(c *fiber.Ctx) error {
@@ -47,12 +49,9 @@ func (h *Handler) createProduct(c *fiber.Ctx) error {
 	}
 	req.UserID = userID
 
-	if errs := h.XValidator.Validate(&req); len(errs) > 0 && errs[0].Error {
-		errMsg := make([]string, 0)
-		for _, err := range errs {
-			errMsg = append(errMsg, fmt.Sprintf("[%s:%v] need to implement '%s'", err.FailedField, err.Value, err.Tag))
-		}
-		return utils.WriteJson(c, 400, "failed field on :", errMsg)
+	errs := h.XValidator.Validate(&req)
+	if len(errs) > 0 {
+		return utils.WriteJson(c, 400, "failed field on :", errs)
 	}
 
 	response, err := h.Service.CreateProduct(c.Context(), &req)
@@ -135,19 +134,19 @@ func (h *Handler) createPIMG(c *fiber.Ctx) error {
 
 	files := form.File["file"]
 	if len(files) == 0 {
-		return utils.WriteJson(c, 400, "missing file", nil)
+		return utils.WriteJson(c, 400, ErrMissingFile.Error(), fiber.Map{
+			"fileMessage": ErrMissingFile.Error(),
+		})
 	}
 
 	if len(files) > 1 {
 		return utils.WriteJson(c, 400, fmt.Sprintf("only accept 1 file ,got '%d'", len(files)), nil)
 	}
 
-	if errs := h.XValidator.Validate(&payload); len(errs) > 0 && errs[0].Error {
-		errMsg := make([]string, 0)
-		for _, err := range errs {
-			errMsg = append(errMsg, fmt.Sprintf("[%s:%v] need to implement '%s'", err.FailedField, err.Value, err.Tag))
-		}
-		return utils.WriteJson(c, 400, "failed field on :", errMsg)
+	errs := h.XValidator.Validate(&payload)
+	if len(errs) > 0 {
+
+		return utils.WriteJson(c, 400, "failed field on :", errs)
 	}
 
 	file := files[0]
@@ -194,4 +193,14 @@ func (h *Handler) getImage(c *fiber.Ctx) error {
 	}
 
 	return utils.WriteJson(c, 200, fmt.Sprintf("product image of product id '%d'", prID), response)
+}
+
+func (h *Handler) serveImage(c *fiber.Ctx) error {
+	query := c.Query("url")
+
+	dir, err := os.Getwd()
+	if err != nil {
+		return utils.WriteJson(c, 500, err.Error(), nil)
+	}
+	return c.SendFile(dir + "/img/" + query)
 }

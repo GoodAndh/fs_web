@@ -264,14 +264,14 @@ func setUp() (*fiber.App, error) {
 
 	userRepo := user.NewRepository(database.DB())
 	userService := user.NewService(userRepo, &Env)
-	userHandler := user.NewHandler(userService, *validate, *middleware)
-	userHandler.RegisterRoute(middleware.App)
+	userHandler := user.NewHandler(userService, *validate, *middleware,middleware.App)
+	userHandler.RegisterRoute()
 
 	prRepo := product.NewRepository(database.DB())
 
 	cartRepo := NewRepository(database.DB())
 	cartService := NewService(cartRepo, prRepo)
-	NewHandler(cartService, *validate, *middleware).RegisterRoute(middleware.App)
+	NewHandler(cartService, *validate, *middleware,middleware.App).RegisterRoute()
 
 	return fiberApp, nil
 }

@@ -53,7 +53,7 @@ func TestE2E(t *testing.T) {
 	})
 
 	t.Run("get product by id ,fail if given was string /not found", func(t *testing.T) {
-		req, err := http.NewRequest(http.MethodGet, baseURL+"product/id/1", nil)
+		req, err := http.NewRequest(http.MethodGet, baseURL+"product/id/10000", nil)
 		if err != nil {
 			t.Fail()
 		}
@@ -71,7 +71,7 @@ func TestE2E(t *testing.T) {
 		if err := json.Unmarshal(byte, &resp); err != nil {
 			t.Fail()
 		}
-		assert.Equal(t, 200, resp.Status)
+		assert.Equal(t, 400, resp.Status)
 
 	})
 
@@ -377,13 +377,13 @@ func setUp() (*fiber.App, error) {
 
 	userRepo := user.NewRepository(database.DB())
 	userService := user.NewService(userRepo, &Env)
-	userHandler := user.NewHandler(userService, *validate,*middleware)
-	userHandler.RegisterRoute(middleware.App)
+	userHandler := user.NewHandler(userService, *validate,*middleware,middleware.App)
+	userHandler.RegisterRoute()
 
 	repo := NewRepository(database.DB())
 	service := NewService(repo)
-	handler := NewHandler(service, *validate, middleware)
-	handler.RegisterRoute(middleware.App)
+	handler := NewHandler(service, *validate, middleware,middleware.App)
+	handler.RegisterRoute()
 
 	return fiberApp, nil
 }

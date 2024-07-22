@@ -198,13 +198,13 @@ func setUp() (*fiber.App, error) {
 
 	userRepo := user.NewRepository(db.DB())
 	userService := user.NewService(userRepo, &Env)
-	user.NewHandler(userService, *validate, middleware).RegisterRoute(middleware.App)
+	user.NewHandler(userService, *validate, middleware,middleware.App).RegisterRoute()
 
 	prRepo := product.NewRepository(db.DB())
 	orderRepo := NewRepository(db.DB())
 	orderService := NewService(orderRepo, prRepo)
-	orderHandler := NewHandler(orderService, *validate, &middleware)
-	orderHandler.RegisterRoute(middleware.App)
+	orderHandler := NewHandler(orderService, *validate, &middleware,middleware.App)
+	orderHandler.RegisterRoute()
 
 	return &fiberApp, nil
 

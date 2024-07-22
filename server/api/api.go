@@ -27,13 +27,20 @@ func NewApi() *Api {
 }
 
 func (a *Api) Run() error {
-	fiberApp := fiber.New(fiber.Config{CaseSensitive: true, EnableSplittingOnParsers: true, ErrorHandler: utils.PanicHandler})
-	api := fiberApp.Group("/api")
-	middleware := utils.Middleware(api, &Env)
-	api.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
-		AllowHeaders: "Origin,Content-Type,Accept",
+	fiberApp := fiber.New(fiber.Config{CaseSensitive: true, EnableSplittingOnParsers: true, ErrorHandler: utils.ErrorHandler})
+
+	fiberApp.Use(cors.New(cors.Config{
+		AllowOrigins: " http://localhost:5173",
+		// http://localhost:5173
+		AllowHeaders:     "Origin,Content-Type,Accept",
+		AllowCredentials: true,
+		AllowMethods:     "GET,POST,OPTIONS",
 	}))
+
+	api := fiberApp.Group("/api")
+
+	middleware := utils.Middleware(api, &Env)
+	api.Use(middleware.Middleware)
 
 	db, err := db.NewDatabase(&Env)
 	if err != nil {
@@ -46,23 +53,23 @@ func (a *Api) Run() error {
 
 	userRepo := user.NewRepository(db.DB())
 	userService := user.NewService(userRepo, &Env)
-	userHandler := user.NewHandler(userService, *validate, *middleware)
-	userHandler.RegisterRoute(middleware.App)
+	userHandler := user.NewHandler(userService, *validate, *middleware, middleware.App)
+	userHandler.RegisterRoute()
 
 	productRepo := product.NewRepository(db.DB())
 	productService := product.NewService(productRepo)
-	productHandler := product.NewHandler(productService, *validate, middleware)
-	productHandler.RegisterRoute(middleware.App)
+	productHandler := product.NewHandler(productService, *validate, middleware, middleware.App)
+	productHandler.RegisterRoute()
 
 	cartRepo := cart.NewRepository(db.DB())
 	cartService := cart.NewService(cartRepo, productRepo)
-	cartHandler := cart.NewHandler(cartService, *validate, *middleware)
-	cartHandler.RegisterRoute(middleware.App)
+	cartHandler := cart.NewHandler(cartService, *validate, *middleware, middleware.App)
+	cartHandler.RegisterRoute()
 
 	orderRepo := orders.NewRepository(db.DB())
 	orderService := orders.NewService(orderRepo, productRepo)
-	orderHandler := orders.NewHandler(orderService, *validate, middleware)
-	orderHandler.RegisterRoute(middleware.App)
+	orderHandler := orders.NewHandler(orderService, *validate, middleware, middleware.App)
+	orderHandler.RegisterRoute()
 
 	return fiberApp.Listen(a.Addr)
 }

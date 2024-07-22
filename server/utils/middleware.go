@@ -13,8 +13,19 @@ type MiddlewareStruct struct {
 	*config.Config
 }
 
-func PanicHandler(c *fiber.Ctx, e error) error {
-	fmt.Println("error:",e)
+func ErrorHandler(c *fiber.Ctx, e error) error {
+	switch err := e.(type) {
+	case *fiber.Error:
+		switch err.Code {
+		case 404:
+			return WriteJson(c, 404, "route not found", nil)
+		case 405:
+			return WriteJson(c, 405, "method not allowed", nil)
+		}
+	default:
+		c.Status(500)
+		return c.SendString("its not you but us")
+	}
 	c.Status(500)
 	return c.SendString("its not you but us")
 }

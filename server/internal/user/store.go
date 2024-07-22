@@ -62,6 +62,11 @@ type UpdateUserProfileResponse struct {
 	Captions string `json:"captions"`
 }
 
+type UserResponse struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
 type Repository interface {
 	GetUserByUsername(ctx context.Context, username string) (*User, error)
 	GetUserByEmail(ctx context.Context, email string) (*User, error)
@@ -69,6 +74,7 @@ type Repository interface {
 	GetUserProfile(ctx context.Context, userID int) (*UserProfile, error)
 	CreateUserProfile(ctx context.Context, user *UserProfile) (int, error)
 	UpdateUserProfile(ctx context.Context, user *UserProfile) error
+	GetUserByID(ctx context.Context,userID int)(*User,error)
 }
 
 type Service interface {
@@ -77,4 +83,5 @@ type Service interface {
 	GetUserProfile(ctx context.Context, userID int) (*UserProfileResponse, error)
 	CreateUserProfile(ctx context.Context, req *UserProfileRequest) (*UserProfileResponse, error)
 	UpdateUserProfile(ctx context.Context, req *UserProfileRequest) (*UpdateUserProfileResponse, error)
+	GetUserByID(ctx context.Context,userID int)(*UserResponse,error)
 }
