@@ -15,8 +15,8 @@ type Handler struct {
 	fiber.Router
 }
 
-func NewHandler(s Service, x utils.XValidator, m *utils.MiddlewareStruct,r fiber.Router) *Handler {
-	return &Handler{s, x, m,r}
+func NewHandler(s Service, x utils.XValidator, m *utils.MiddlewareStruct, r fiber.Router) *Handler {
+	return &Handler{s, x, m, r}
 }
 
 func (h *Handler) RegisterRoute() {
@@ -41,7 +41,6 @@ func (h *Handler) createOrders(c *fiber.Ctx) error {
 	}
 	payload.UserID = userID
 
-	
 	errs := h.XValidator.Validate(&payload)
 	if len(errs) > 0 {
 

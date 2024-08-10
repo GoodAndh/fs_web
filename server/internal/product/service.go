@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	ErrMissingFile error = errors.New("missing file")
+	ErrMissingFile    error = errors.New("missing file")
+	ErrMissingProduct error
 )
 
 type service struct {
@@ -165,4 +166,34 @@ func (s *service) GetProductImage(ctx context.Context, productID int) ([]*Produc
 	}
 
 	return pm, nil
+}
+
+func (s *service) GetMyProduct(ctx context.Context, userID int) ([]*GetProductResponse, error) {
+	c, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	prc := []*GetProductResponse{}
+
+	pr, err := s.Repository.GetProductByUserID(c, userID)
+	if err != nil {
+		return []*GetProductResponse{}, err
+	}
+
+	if len(pr) <= 0 {
+		ErrMissingProduct = errors.New("you dont have any product yet")
+		return []*GetProductResponse{}, ErrMissingProduct
+	}
+
+	for _, v := range pr {
+		product := &GetProductResponse{
+			ID:          v.ID,
+			Name:        v.Name,
+			Description: v.Description,
+			Price:       v.Price,
+			Stock:       v.Stock,
+		}
+		prc = append(prc, product)
+	}
+
+	return prc, nil
 }

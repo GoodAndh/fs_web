@@ -75,4 +75,5 @@ type Service interface {
 	GetProductByName(ctx context.Context, name string) (*GetProductResponse, error)
 	CreateProductImage(ctx context.Context,userID int, req *CreateProductImageRequest) (*ProductImageResponse, error)
 	GetProductImage(ctx context.Context, productID int)([]*ProductImageResponse,error)
+	GetMyProduct(ctx context.Context,userID int)([]*GetProductResponse,error)
 }

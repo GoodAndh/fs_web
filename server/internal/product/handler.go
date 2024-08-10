@@ -30,6 +30,7 @@ func (h *Handler) RegisterRoute() {
 	h.Router.Post("/product/image/:id", h.MiddlewareWithJWT, h.createPIMG)
 	h.Router.Get("/product/image/:id", h.getImage)
 	h.Router.Get("/product/serveimg", h.serveImage)
+	h.Router.Get("/product/ownproduct",h.MiddlewareWithJWT,h.myProduct)
 }
 
 func (h *Handler) createProduct(c *fiber.Ctx) error {
@@ -203,4 +204,24 @@ func (h *Handler) serveImage(c *fiber.Ctx) error {
 		return utils.WriteJson(c, 500, err.Error(), nil)
 	}
 	return c.SendFile(dir + "/img/" + query)
+}
+
+func (h *Handler)myProduct(c *fiber.Ctx)error  {
+	idFromContext, ok := c.Locals("userID").(string)
+	if idFromContext == "" || !ok {
+		return utils.WriteJson(c, 401, fmt.Sprintf("[id from context :%v ]", idFromContext), nil)
+	}
+
+	userID, err := strconv.Atoi(string(idFromContext))
+	if err != nil {
+		return utils.WriteJson(c, 500, err.Error(), nil)
+	}
+
+	response,err:=h.Service.GetMyProduct(c.Context(),userID)
+	if err != nil {
+		return utils.WriteJson(c,400,err.Error(),nil)
+	}
+
+	return utils.WriteJson(c,200,"response success",response)
+
 }
