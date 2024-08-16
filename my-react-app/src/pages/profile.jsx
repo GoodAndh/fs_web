@@ -15,12 +15,7 @@ import { usePostJson } from "../utils/customHook.js";
 import FiEdit from "../assets/edit.svg";
 
 import Images from "../components/Images.jsx";
-{
-  /* <Images
-url="user/serveprofile"
-params={{ url: "urlUpdateCoba.png " }}
-/> */
-}
+
 function Profile() {
   const { data: url, error: error } = useGetJson("user/profile");
   const { data: data } = useGetJson("user/getuser");
@@ -36,12 +31,6 @@ function Profile() {
     url: "",
   };
   const [form, setForm] = useState(formInitial);
-  const initialResponse = {
-    fileMessage: "",
-    Url: "",
-    Captions: "",
-  };
-  const [response, setResponse] = useState(initialResponse);
 
   const {
     data: createResponse,
@@ -51,12 +40,9 @@ function Profile() {
   } = usePostJson("user/profile/create");
   const {
     data: updateResponse,
-    error: errorUpdate,
     call: callUpdate,
     resetResponse: resetUpdate,
   } = usePostJson("user/profile/update");
-
- 
 
   const clickBro = () => {
     setOpen((is) => !is);
@@ -64,14 +50,15 @@ function Profile() {
 
   const onChange = (id, value, files) => {
     setForm({ ...form, [id]: value });
-    files && files[0] && setFile(files[0]);
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result);
-    };
 
     if (files && files[0]) {
+      const file = files && files[0];
+      setFile(file && file);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result);
+      };
       reader.readAsDataURL(files[0]);
     } else {
       setPreview(null);
@@ -100,46 +87,19 @@ function Profile() {
 
   useEffect(() => {
     if (updateResponse) {
-      setResponse(initialResponse);
       resetUpdate();
-    }
-    if (errorUpdate) {
-      const newRes = { ...response };
-      if (errorUpdate.data) {
-        Object.keys(errorUpdate.data).forEach((keys) => {
-          response.hasOwnProperty(keys) &&
-            (newRes[keys] = errorUpdate.data[keys]);
-        });
-        Object.keys(response).forEach((keys) => {
-          !errorUpdate.data.hasOwnProperty(keys) && (newRes[keys] = "");
-        });
-      }
-      setResponse(newRes);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [updateResponse, errorUpdate]);
+  }, [updateResponse]);
 
   useEffect(() => {
     if (createResponse) {
-      setResponse(initialResponse);
       resetCreate();
     }
 
-    if (errorCreate) {
-      const newRes = { ...response };
-      if (errorCreate.data) {
-        Object.keys(errorCreate.data).forEach((keys) => {
-          response.hasOwnProperty(keys) &&
-            (newRes[keys] = errorCreate.data[keys]);
-        });
-        Object.keys(response).forEach((keys) => {
-          !errorCreate.data.hasOwnProperty(keys) && (newRes[keys] = "");
-        });
-      }
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createResponse, errorCreate]);
+  }, [createResponse]);
 
   return (
     <>
@@ -166,7 +126,7 @@ function Profile() {
                 (previewUrl && (
                   <img
                     src={previewUrl}
-                    alt="you dont have any images to show try edit"
+                    alt="you dont have any images to show, try edit"
                     className="ml-[10px]"
                   />
                 ))}
@@ -189,21 +149,21 @@ function Profile() {
                 type="file"
                 title="Insert Image"
                 inputChange={onChange}
-                validate={response.fileMessage}
+                validate={errorCreate?.data?.fileMessage || ""}
               />
               <Form
                 id="url"
                 type="text"
                 title="Image Name Initial(Url)"
                 inputChange={onChange}
-                validate={response.Url}
+                validate={errorCreate?.data?.Url || ""}
               />
               <Form
                 id="captions"
                 type="text"
                 title="Captions Name Initial(Captions)"
                 inputChange={onChange}
-                validate={response.Captions}
+                validate={errorCreate?.data?.Captions || ""}
               />
               <button
                 onClick={doSubmit}
@@ -233,50 +193,66 @@ function Profile() {
                 </div>
               </div>
             </div>
-            {myProduct &&
-              myProduct.data &&
-              myProduct.data.map((item) => {
-                return (
-                  <div
-                    key={item.id}
-                    className="w-[700px] h-auto mx-auto m-6 rounded-xl shadow-lg"
-                  >
-                    <div className="ml-[655px] w-[45px] h-[50px] rounded-lg m-2 hover:cursor-pointer bg-slate-300">
-                      <img
-                        src={FiEdit}
-                        alt="not found images"
-                        className="ml-[10px]"
-                      />
-                      <span className="m-2 font-semibold">Edit</span>
-                    </div>
-                    <div className="flex items-center justify-center container w-[200px] ml-4 my-4">
-                      <div className="flex gap-8">
-                        <div className="rounded-xl shadow-lg bg-slate-300">
-                          <div className="m-2 p-1 ">
-                            <ImageSlider itemID={item.id} />
-                          </div>
-                          <br />
-                          <h2 className="text-2xl md:text-3xl m-1">
-                            {item.name}
-                          </h2>
-                          <p className="text-md font-medium m-1">
-                            {" "}
-                            Rp.{item.price}
-                          </p>
-                          <div className="my-4">
-                            <Link
-                            to={`/p/${item.name}`}
-                            className="my-5 w-full p-2 bg-transparent hover:bg-green-500 text-slate-700 font-semibold hover:text-white py-2 px-4 border border-slate-500 hover:border-transparent rounded-xl"
-                            >
-                              Selengkapnya
-                            </Link>
+            {myProduct ? (
+              <div className="w-[700px] max-h-[1000px] mx-auto m-6 rounded-xl shadow-lg overflow-auto">
+                <div className="flex gap-8 items-center justify-center w-[500px] container ml-2 my-4">
+                  {/* start item */}
+                  {myProduct.data &&
+                    myProduct.data.map((item) => {
+                      return (
+                        <div key={item.id} className="flex gap-4">
+                          <div className="rounded-xl shadow-lg border-[1px] border-slate-300 mb-4">
+                            <div className="m-2 p-1 ">
+                              <ImageSlider itemID={item.id} />
+                            </div>
+                            <br />
+                            <h2 className="text-2xl md:text-3xl m-1">
+                              {item.name}
+                            </h2>
+                            <p className="text-md font-medium m-1">
+                              {" "}
+                              Rp.{item.price}
+                            </p>
+                            <div className="my-4 text-center border border-green-400 rounded-lg mx-[5px] hover:bg-green-500 hover:text-slate-100">
+                              <Link
+                                to={`/p/${item.name}`}
+                                className="my-5  p-2 bg-transparen font-semibold "
+                              >
+                                Edit
+                              </Link>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })}
+                </div>
+                <div className="p-1 mb-2 mx-[15px] border border-green-400 text-center rounded-lg cursor-pointer font-semibold hover:bg-green-500 hover:text-slate-100">
+                  <Link
+                    to={`/create/pr`}
+                    className=" bg-transparen font-semibold "
+                  >
+                    Tambah produk
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="w-[700px] h-[100px] mx-auto m-6 rounded-xl shadow-lg overflow-hidden text-center ">
+                  <p className="font-bold m-4 ">
+                    Kamu belum mempunyai produk apapun
+                  </p>
+
+                  <div className="p-1 mb-2 mx-[15px] border border-green-400 text-center rounded-lg cursor-pointer font-semibold hover:bg-green-500 hover:text-slate-100">
+                    <Link
+                      to={`/create/pr`}
+                      className=" bg-transparen font-semibold "
+                    >
+                      Tambah produk
+                    </Link>
                   </div>
-                );
-              })}
+                </div>
+              </>
+            )}
           </div>
         </>
       )}

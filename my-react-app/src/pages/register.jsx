@@ -1,26 +1,19 @@
 /* eslint-disable no-prototype-builtins */
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Form from "../components/Form.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { usePostJson } from "../utils/customHook.js";
 import { Link } from "react-router-dom";
 
-
 function Register() {
-  const [form, setForm] = useState({
+  const initialForm = {
     username: "",
     email: "",
     password: "",
     cpassword: "",
-  });
-  const initialResponseState = {
-    Username: "",
-    Password: "",
-    Email: "",
-    VPassword: "",
   };
-  const [response, setResponse] = useState(initialResponseState);
-  const { data, error, call, resetResponse } = usePostJson("signup");
+  const [form, setForm] = useState(initialForm);
+  const { data, error, call } = usePostJson("signup");
 
   const onChange = (id, value) => {
     setForm({ ...form, [id]: value });
@@ -28,28 +21,8 @@ function Register() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    await call({ form: form });
+    await call({ form: form }); 
   };
-
-  useEffect(() => {
-    if (data) {
-      setResponse(initialResponseState);
-      resetResponse();
-    }
-    if (error) {
-      const newRes = { ...response };
-      if (error.data) {
-        Object.keys(error.data).forEach((keys) => {
-          response.hasOwnProperty(keys) && (newRes[keys] = error.data[keys]);
-        });
-        Object.keys(response).forEach((keys) => {
-          !error.data.hasOwnProperty(keys) && (newRes[keys] = "");
-        });
-      }
-      setResponse(newRes);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, error]);
 
   return (
     <>
@@ -74,28 +47,28 @@ function Register() {
           type="text"
           title="Username"
           inputChange={onChange}
-          validate={response.Username}
+          validate={ error?.data?.Username || ""}
         ></Form>
         <Form
           id="email"
           type="text"
           title="Email"
           inputChange={onChange}
-          validate={response.Email}
+          validate={error?.data?.Email || ""}
         ></Form>
         <Form
           id="password"
           type="password"
           title="Password"
           inputChange={onChange}
-          validate={response.Password}
+          validate={ error?.data?.Password || ""}
         ></Form>
         <Form
           id="vpassword"
           type="password"
           title="Validate Password"
           inputChange={onChange}
-          validate={response.VPassword}
+          validate={error?.data?.VPassword || ""}
         ></Form>
         <button
           onClick={onSubmit}

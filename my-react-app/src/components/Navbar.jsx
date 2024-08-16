@@ -16,8 +16,6 @@ export default function Navbar() {
     setInputValue(e.target.value);
   };
 
-
-
   const openModal = () => {
     setIsOpen(true);
   };
@@ -115,18 +113,18 @@ export default function Navbar() {
               onChange={onChange}
               className="border-2 border-slate-500 mr-[3px] rounded-l-lg focus:outline-none text-center"
             />
-            <link to={`/p/${inputValue}`} className="">
+            <Link to={`/p/${inputValue}`} className="">
               <img
                 src={IoSearch}
                 alt="not found images"
                 className="size-[35px] border-2 border-slate-500 rounded-r-lg cursor-pointer hover:bg-slate-400"
               />
-            </link>
+            </Link>
           </div>
         }
         onCloseButton={
           <>
-            <div className="border-2 border-slate-300 rounded-t-lg w-[60px] text-center hover:bg-green-300">
+            <div className="border-2 border-slate-300 rounded-t-lg w-[60px] text-center hover:bg-green-300 mt-8">
               <button className="" onClick={closeModal}>
                 Close
               </button>

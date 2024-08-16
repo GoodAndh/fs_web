@@ -4,6 +4,7 @@ import Home from "./pages/home.jsx";
 import Register from "./pages/register.jsx";
 import Profile from "./pages/profile.jsx";
 import ProductPage from "./pages/productPage.jsx";
+import CreateProduct from "./pages/createProduct.jsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -33,6 +34,10 @@ function App() {
       path: "/p/:nm",
       element: <ProductPage />,
     },
+    {
+      path:"/create/pr",
+      element:<CreateProduct/>
+    }
   ]);
 
   return (

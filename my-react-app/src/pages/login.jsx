@@ -1,16 +1,14 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar.jsx";
 import Form from "../components/Form.jsx";
 import { useNavigate } from "react-router-dom";
 import { usePostJson } from "../utils/customHook.js";
 
 function Login() {
- 
   const [form, setForm] = useState({
     username: "",
     password: "",
   });
-  const [response, setResponse] = useState("");
   const navigate = useNavigate();
   const { data, error, call } = usePostJson("signin");
   const onChange = (id, value) => {
@@ -18,23 +16,17 @@ function Login() {
   };
   const onSubmit = async (e) => {
     e.preventDefault();
-    await call({form:form});
+    await call({ form: form });
   };
 
   useEffect(() => {
-    if (error) {
-      setResponse(error.message)
-    }
     if (data) {
-      console.log("data:",data);
-      navigate("/")
+      navigate("/");
       window.location.reload();
     }
-   
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data,error])
-  
- 
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   return (
     <>
@@ -45,15 +37,21 @@ function Login() {
           type="text"
           title="Username"
           inputChange={onChange}
-          validate={response}
+          validate={error?.message || ""}
         ></Form>
         <Form
           id="password"
           type="password"
           title="Password"
           inputChange={onChange}
-          validate={response}
+          validate={error?.message || ""}
         ></Form>
+        <p className="mt-4 text-center font-semibold">
+          belum punya akun?
+          <a href="/signup" className="ml-1 text-green-500 hover:underline">
+            Buat Akun
+          </a>
+        </p>
         <button
           onClick={onSubmit}
           className="my-5 w-full p-2 bg-transparent hover:bg-green-500 text-slate-700 font-semibold hover:text-white py-2 px-4 border border-slate-500 hover:border-transparent rounded-xl"

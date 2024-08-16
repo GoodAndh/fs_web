@@ -55,17 +55,30 @@ export function usePostJson(url) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const call = async function ({ form, headers, params, fallbackFunc }) {
+  const call = async function ({
+    form,
+    headers,
+    params,
+    fallbackFunc,
+    addUrls,
+  }) {
     setLoading(true);
     try {
-      const queryURL = params
-        ? `${url}?${new URLSearchParams(params).toString()}`
-        : url;
+      let queryURL = `${url}`;
+      if (addUrls) {
+        queryURL += `${addUrls}`;
+      }
+      if (params) {
+        queryURL += `?${new URLSearchParams(params).toString()}`;
+      }
+
       const response = await instance.post(queryURL, form, {
         headers: headers,
       });
       setData(response.data);
+      setError(null)
     } catch (e) {
+      setData(null)
       setError(e.response.data);
       if (fallbackFunc) {
         await fallbackFunc({ form, params });
@@ -76,6 +89,7 @@ export function usePostJson(url) {
   };
 
   const resetResponse = () => {
+    setData(null)
     setError(null);
   };
 

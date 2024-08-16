@@ -1,7 +1,8 @@
 import Modal from "./Modal.jsx";
-import { Link, } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-function ModalLoginErrorMsg() {
+// eslint-disable-next-line react/prop-types
+function ModalLoginErrorMsg({ closeButton }) {
   return (
     <>
       <Modal
@@ -24,6 +25,7 @@ function ModalLoginErrorMsg() {
             </p>
           </div>
         }
+        onCloseButton={closeButton}
       />
     </>
   );
