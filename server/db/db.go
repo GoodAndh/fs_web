@@ -6,7 +6,14 @@ import (
 	"database/sql"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database"
 )
+
+func Migrate(sURL, dbName string, dbDriver database.Driver) (*migrate.Migrate, error) {
+	m, err := migrate.NewWithDatabaseInstance(sURL, dbName, dbDriver)
+	return m, err
+}
 
 type Database struct {
 	db *sql.DB

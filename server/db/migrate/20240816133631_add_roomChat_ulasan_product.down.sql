@@ -1,0 +1,1 @@
+drop table if exists ulasan_room_chat_product;

@@ -156,3 +156,76 @@ func (r *repository) GetProductImage(ctx context.Context, productID int) ([]*Pro
 
 	return pm, nil
 }
+
+
+func (r *repository) CreateRoomChat(ctx context.Context, URC *UlasanRoomChatProduct) (int, string, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, "", err
+	}
+
+	result, err := tx.ExecContext(ctx, "insert into ulasan_room_chat_product(roomID,userID,ProductID,username) values(?,?,?,?)", URC.RoomID, URC.UserID, URC.ProductID, URC.Username)
+	if err != nil {
+		tx.Rollback()
+		return 0, "", err
+	}
+
+	roomID, err := result.LastInsertId()
+	if err != nil {
+		tx.Rollback()
+		return 0, "", err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return 0, "", err
+	}
+
+	return int(roomID), URC.RoomID, nil
+
+}
+
+func (r *repository) CreateRoomChatMessage(ctx context.Context, URC *UlasanRoomChatProductMessage) (int, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+	result, err := tx.ExecContext(ctx, "insert into ulasan_room_chat_product_message(roomChatID,message,sendAt,isDeleted) values(?,?,?,?)", URC.RoomID, URC.Message, URC.SendAt, URC.IsDeleted)
+	if err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	return int(id), nil
+}
+
+func (r *repository) GetRoomByProductID(ctx context.Context, ProductID int) ([]*UlasanRoomChatProduct, error) {
+	ulrSlice := []*UlasanRoomChatProduct{}
+	rows, err := r.db.QueryContext(ctx, "select id,roomid,userID,productID,username from ulasan_room_chat_product where productID = ?", ProductID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		ulr := &UlasanRoomChatProduct{}
+		err := rows.Scan(&ulr.ID, &ulr.RoomID, &ulr.UserID, &ulr.ProductID, &ulr.Username)
+		if err != nil {
+			return nil, err
+		}
+		ulrSlice = append(ulrSlice, ulr)
+	}
+	return ulrSlice, nil
+}

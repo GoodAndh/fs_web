@@ -16,3 +16,6 @@ test:
 	go test -timeout 30s -run ^TestE2E$$ backend/server/internal/product
 	go test -timeout 30s -run ^TestE2E$$ backend/server/internal/cart
 	go test -timeout 30s -run ^TestE2E$$ backend/server/internal/orders
+	
+mfo:
+	 go run  server/db/migrate/force/main.go

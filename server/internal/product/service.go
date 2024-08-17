@@ -5,12 +5,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 )
 
 var (
-	ErrMissingFile    error = errors.New("missing file")
-	ErrMissingProduct error
+	ErrMissingFile     error = errors.New("missing file")
+	ErrMissingProduct  error
+	ErrMissingRoomChat error = fmt.Errorf("you dont have any room chat,try created one")
+	ErrMissingAccess   error = fmt.Errorf("you dont have any access to this chat")
 )
 
 type service struct {
@@ -196,4 +199,96 @@ func (s *service) GetMyProduct(ctx context.Context, userID int) ([]*GetProductRe
 	}
 
 	return prc, nil
+}
+
+func (s *service) CreateRoomChat(ctx context.Context, URC *CreateRoomChatRequest) (*CreateRoomChatResponse, error) {
+	c, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	productID := strconv.Itoa(URC.ProductID)
+	userID := strconv.Itoa(URC.UserID)
+
+	rID, err := utils.GenerateRoomID(productID, userID, 21)
+	if err != nil {
+		return &CreateRoomChatResponse{}, err
+	}
+
+	id, roomID, err := s.Repository.CreateRoomChat(c, &UlasanRoomChatProduct{
+		RoomID:    rID,
+		UserID:    URC.UserID,
+		ProductID: URC.ProductID,
+		Username:  URC.Username,
+	})
+	if err != nil {
+		return &CreateRoomChatResponse{}, err
+	}
+
+	return &CreateRoomChatResponse{
+		ID:     id,
+		RoomID: roomID,
+	}, nil
+}
+
+func (s *service) CreateRoomChatMessage(ctx context.Context, URC *CreateRoomChatProductMessageReq) (*CreateRoomChatProductMessageRes, error) {
+	c, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	// check if the room exist return error if it isnt exist
+	roomChat, err := s.Repository.GetRoomByProductID(c, URC.ProductID)
+	if err != nil {
+		return &CreateRoomChatProductMessageRes{}, err
+	}
+
+	if len(roomChat) < 1 {
+		return &CreateRoomChatProductMessageRes{}, ErrMissingRoomChat
+	}
+
+	product, err := s.Repository.GetProductByID(c, URC.ProductID)
+	if err != nil {
+		return &CreateRoomChatProductMessageRes{}, err
+	}
+
+	// store into map for easier access
+	roomMap := make(map[int]UlasanRoomChatProduct)
+	for _, v := range roomChat {
+		roomMap[v.ID] = *v
+	}
+
+	// check if roomID is valid
+	message, err := validRoomChatID(roomMap, URC, *product)
+	if err != nil {
+		return &CreateRoomChatProductMessageRes{}, err
+	}
+
+	roomID, err := s.Repository.CreateRoomChatMessage(c, &UlasanRoomChatProductMessage{
+		RoomID:    URC.RoomID,
+		Message:   message,
+		SendAt:    time.Now(),
+		IsDeleted: false,
+	})
+	if err != nil {
+		return &CreateRoomChatProductMessageRes{}, err
+	}
+
+	return &CreateRoomChatProductMessageRes{
+		RoomID:  roomID,
+		Message: message,
+	}, nil
+}
+
+func validRoomChatID(rMap map[int]UlasanRoomChatProduct, urc *CreateRoomChatProductMessageReq, product Product) (string, error) {
+	room, ok := rMap[urc.RoomID]
+	if !ok {
+		return "", fmt.Errorf("cannot find room id,have you ever created one ?")
+	}
+
+	if urc.Message == "" {
+		urc.Message = "empty-string"
+	}
+
+	if urc.UserID != room.UserID && urc.UserID != product.UserID {
+		return "", ErrMissingAccess
+	}
+
+	return urc.Message, nil
 }

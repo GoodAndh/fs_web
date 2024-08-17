@@ -58,6 +58,45 @@ type ProductImageResponse struct {
 	Captions string `json:"captions"`
 }
 
+type UlasanRoomChatProduct struct {
+	ID        int
+	RoomID    string
+	UserID    int
+	ProductID int
+	Username  string
+}
+
+type UlasanRoomChatProductMessage struct {
+	ID        int
+	RoomID    int
+	Message   string
+	SendAt    time.Time
+	IsDeleted bool
+}
+
+type CreateRoomChatProductMessageReq struct {
+	UserID    int    `json:"user_id" validate:"required"`
+	ProductID int    `json:"product_id" validate:"required"`
+	RoomID    int    `json:"room_id" validate:"required"`
+	Message   string `json:"message"`
+}
+
+type CreateRoomChatProductMessageRes struct {
+	RoomID  int    `json:"room_id" validate:"required"`
+	Message string `json:"message"`
+}
+
+type CreateRoomChatRequest struct {
+	UserID    int    `json:"user_id" validate:"required"`
+	ProductID int    `json:"product_id" validate:"required"`
+	Username  string `json:"username" validate:"required"`
+}
+
+type CreateRoomChatResponse struct {
+	ID     int    `json:"id"`
+	RoomID string `json:"room_id"`
+}
+
 type Repository interface {
 	CreateProduct(ctx context.Context, product *Product) (int, error)
 	GetAllProduct(ctx context.Context) ([]*Product, error)
@@ -66,6 +105,9 @@ type Repository interface {
 	GetProductByUserID(ctx context.Context, userID int) ([]*Product, error)
 	CreateProductImage(ctx context.Context, img *ProductImage) error
 	GetProductImage(ctx context.Context, productID int) ([]*ProductImage, error)
+	GetRoomByProductID(ctx context.Context, ProductID int) ([]*UlasanRoomChatProduct, error)
+	CreateRoomChat(ctx context.Context, URC *UlasanRoomChatProduct) (int, string, error)
+	CreateRoomChatMessage(ctx context.Context, URC *UlasanRoomChatProductMessage) (int, error)
 }
 
 type Service interface {
@@ -73,7 +115,9 @@ type Service interface {
 	GetAllProduct(ctx context.Context) ([]*GetProductResponse, error)
 	GetProductByID(ctx context.Context, id int) (*GetProductResponse, error)
 	GetProductByName(ctx context.Context, name string) (*GetProductResponse, error)
-	CreateProductImage(ctx context.Context,userID int, req *CreateProductImageRequest) (*ProductImageResponse, error)
-	GetProductImage(ctx context.Context, productID int)([]*ProductImageResponse,error)
-	GetMyProduct(ctx context.Context,userID int)([]*GetProductResponse,error)
+	CreateProductImage(ctx context.Context, userID int, req *CreateProductImageRequest) (*ProductImageResponse, error)
+	GetProductImage(ctx context.Context, productID int) ([]*ProductImageResponse, error)
+	GetMyProduct(ctx context.Context, userID int) ([]*GetProductResponse, error)
+	CreateRoomChat(ctx context.Context, URC *CreateRoomChatRequest) (*CreateRoomChatResponse, error)
+	CreateRoomChatMessage(ctx context.Context, URC *CreateRoomChatProductMessageReq) (*CreateRoomChatProductMessageRes, error)
 }

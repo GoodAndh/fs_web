@@ -30,7 +30,9 @@ func (h *Handler) RegisterRoute() {
 	h.Router.Post("/product/image/:id", h.MiddlewareWithJWT, h.createPIMG)
 	h.Router.Get("/product/image/:id", h.getImage)
 	h.Router.Get("/product/serveimg", h.serveImage)
-	h.Router.Get("/product/ownproduct",h.MiddlewareWithJWT,h.myProduct)
+	h.Router.Get("/product/ownproduct", h.MiddlewareWithJWT, h.myProduct)
+	h.Router.Post("/rc/prul", h.MiddlewareWithJWT, h.createRoomChatProduct)
+	h.Router.Post("rc/prul/message", h.MiddlewareWithJWT, h.createMessageProduct)
 }
 
 func (h *Handler) createProduct(c *fiber.Ctx) error {
@@ -93,6 +95,8 @@ func (h *Handler) getProductByID(c *fiber.Ctx) error {
 func (h *Handler) getProductByName(c *fiber.Ctx) error {
 	name := c.Params("name", "not found")
 	newName := strings.ReplaceAll(name, "%20", " ")
+	newName = strings.ReplaceAll(newName, "-", " ")
+
 	product, err := h.Service.GetProductByName(c.Context(), newName)
 	if err != nil {
 		if err == utils.ErrNotFound {
@@ -179,7 +183,7 @@ func (h *Handler) createPIMG(c *fiber.Ctx) error {
 		return utils.WriteJson(c, 400, err.Error(), nil)
 	}
 
-	return utils.WriteJson(c, 200, "success create image", response)
+	return utils.WriteJson(c, 200, fmt.Sprintf("success create image of id :%d", payload.ProductID), response)
 }
 
 func (h *Handler) getImage(c *fiber.Ctx) error {
@@ -206,7 +210,7 @@ func (h *Handler) serveImage(c *fiber.Ctx) error {
 	return c.SendFile(dir + "/img/" + query)
 }
 
-func (h *Handler)myProduct(c *fiber.Ctx)error  {
+func (h *Handler) myProduct(c *fiber.Ctx) error {
 	idFromContext, ok := c.Locals("userID").(string)
 	if idFromContext == "" || !ok {
 		return utils.WriteJson(c, 401, fmt.Sprintf("[id from context :%v ]", idFromContext), nil)
@@ -217,11 +221,74 @@ func (h *Handler)myProduct(c *fiber.Ctx)error  {
 		return utils.WriteJson(c, 500, err.Error(), nil)
 	}
 
-	response,err:=h.Service.GetMyProduct(c.Context(),userID)
+	response, err := h.Service.GetMyProduct(c.Context(), userID)
 	if err != nil {
-		return utils.WriteJson(c,400,err.Error(),nil)
+		return utils.WriteJson(c, 400, err.Error(), nil)
 	}
 
-	return utils.WriteJson(c,200,"response success",response)
+	return utils.WriteJson(c, 200, "response success", response)
+
+}
+
+
+func (h *Handler) createRoomChatProduct(c *fiber.Ctx) error {
+
+	idFromContext, ok := c.Locals("userID").(string)
+	if !ok {
+		return utils.WriteJson(c, 401, "unauthorized", nil)
+	}
+
+	userID, err := strconv.Atoi(idFromContext)
+	if err != nil {
+		return utils.WriteJson(c, 401, "unauthorized", nil)
+	}
+	var req CreateRoomChatRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.WriteJson(c, 500, err.Error(), nil)
+	}
+	req.UserID = userID
+
+	errs := h.XValidator.Validate(&req)
+	if len(errs) > 0 {
+		return utils.WriteJson(c, 400, "failed field on :", errs)
+	}
+
+	response, err := h.Service.CreateRoomChat(c.Context(), &req)
+	if err != nil {
+		return utils.WriteJson(c, 400, err.Error(), nil)
+	}
+
+	return utils.WriteJson(c, 200, "success create room chat", response)
+
+}
+
+func (h *Handler) createMessageProduct(c *fiber.Ctx) error {
+	idFromContext, ok := c.Locals("userID").(string)
+	if !ok {
+		return utils.WriteJson(c, 401, "unauthorized", nil)
+	}
+
+	userID, err := strconv.Atoi(idFromContext)
+	if err != nil {
+		return utils.WriteJson(c, 401, "unauthorized", nil)
+	}
+	var req CreateRoomChatProductMessageReq
+
+	prID := c.QueryInt("prID", 0)
+	req.ProductID = prID
+	req.UserID = userID
+
+	errs := h.XValidator.Validate(&req)
+	if len(errs) > 0 {
+		return utils.WriteJson(c, 400, "failed field on :", errs)
+	}
+
+	response, err := h.Service.CreateRoomChatMessage(c.Context(), &req)
+	if err != nil {
+
+		return utils.WriteJson(c, 400, err.Error(), nil)
+	}
+
+	return utils.WriteJson(c, 200, "create message success", response)
 
 }
