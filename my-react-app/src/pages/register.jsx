@@ -21,7 +21,7 @@ function Register() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    await call({ form: form }); 
+    await call({ form: form });
   };
 
   return (
@@ -47,7 +47,7 @@ function Register() {
           type="text"
           title="Username"
           inputChange={onChange}
-          validate={ error?.data?.Username || ""}
+          validate={error?.data?.Username || ""}
         ></Form>
         <Form
           id="email"
@@ -61,7 +61,7 @@ function Register() {
           type="password"
           title="Password"
           inputChange={onChange}
-          validate={ error?.data?.Password || ""}
+          validate={error?.data?.Password || ""}
         ></Form>
         <Form
           id="vpassword"
@@ -70,6 +70,12 @@ function Register() {
           inputChange={onChange}
           validate={error?.data?.VPassword || ""}
         ></Form>
+        <p className="mt-4 text-center font-semibold">
+          sudah punya akun?
+          <a href="/signin" className="ml-1 text-green-500 hover:underline">
+            Login
+          </a>
+        </p>
         <button
           onClick={onSubmit}
           className="my-5 w-full p-2 bg-transparent hover:bg-green-500 text-slate-700 font-semibold hover:text-white py-2 px-4 border border-slate-500 hover:border-transparent rounded-xl"

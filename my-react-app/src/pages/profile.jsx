@@ -8,8 +8,6 @@ import Form from "../components/Form.jsx";
 import ModalLoginErrorMsg from "../components/ModalLoginErrorMsg.jsx";
 import ImageSlider from "../components/ProductImageSlider.jsx";
 
-import { Link } from "react-router-dom";
-
 import { usePostJson } from "../utils/customHook.js";
 
 import FiEdit from "../assets/edit.svg";
@@ -194,47 +192,57 @@ function Profile() {
               </div>
             </div>
             {myProduct ? (
-              <div className="w-[700px] max-h-[1000px] mx-auto m-6 rounded-xl shadow-lg overflow-auto">
-                <div className="flex gap-8 items-center justify-center w-[500px] container ml-2 my-4">
-                  {/* start item */}
+              <>
+                <div className="flex w-[700px] max-h-[1000px] mx-auto m-6 rounded-xl shadow-lg overflow-auto">
                   {myProduct.data &&
                     myProduct.data.map((item) => {
                       return (
-                        <div key={item.id} className="flex gap-4">
-                          <div className="rounded-xl shadow-lg border-[1px] border-slate-300 mb-4">
-                            <div className="m-2 p-1 ">
-                              <ImageSlider itemID={item.id} />
-                            </div>
-                            <br />
-                            <h2 className="text-2xl md:text-3xl m-1">
+                        <div
+                          key={item.id}
+                          className="w-[240px]  rounded-md m-2 my-4 h-[300px] border border-slate-500"
+                        >
+                          <div className="bg-transparent p-1 mx-auto my-2  w-[220px] h-[100px] overflow-hidden">
+                            <ImageSlider itemID={item.id} />
+                          </div>
+                          <div className=" w-[220px] mx-auto my-2 h-[170px]">
+                            {/* information about product here */}
+                            <h1 className="p-2 font-semibold text-xl text-center">
                               {item.name}
-                            </h2>
-                            <p className="text-md font-medium m-1">
-                              {" "}
+                            </h1>
+
+                            <p className="font-medium p-2 m-4">
                               Rp.{item.price}
                             </p>
-                            <div className="my-4 text-center border border-green-400 rounded-lg mx-[5px] hover:bg-green-500 hover:text-slate-100">
-                              <Link
-                                to={`/p/${item.name}`}
-                                className="my-5  p-2 bg-transparen font-semibold "
+                            <div
+                              onClick={() =>
+                                document.getElementById("editProduk").click()
+                              }
+                              className="cursor-pointer  mt-4 text-center border border-green-400 rounded-lg mx-[5px] hover:bg-green-500 hover:text-slate-100"
+                            >
+                              <a
+                                href={`/p/${item.name}`}
+                                className=""
+                                id="editProduk"
                               >
-                                Edit
-                              </Link>
+                                {" "}
+                                Tambah produk
+                              </a>
                             </div>
                           </div>
                         </div>
                       );
                     })}
                 </div>
-                <div className="p-1 mb-2 mx-[15px] border border-green-400 text-center rounded-lg cursor-pointer font-semibold hover:bg-green-500 hover:text-slate-100">
-                  <Link
-                    to={`/create/pr`}
-                    className=" bg-transparen font-semibold "
-                  >
+                <div
+                  onClick={() => document.getElementById("go").click()}
+                  className="w-[700px] mx-auto  p-1 mb-[15px]  border border-green-400 text-center rounded-lg cursor-pointer font-semibold hover:bg-green-500 hover:text-slate-100"
+                >
+                  <a href="/create/pr" className="" id="go">
+                    {" "}
                     Tambah produk
-                  </Link>
+                  </a>
                 </div>
-              </div>
+              </>
             ) : (
               <>
                 <div className="w-[700px] h-[100px] mx-auto m-6 rounded-xl shadow-lg overflow-hidden text-center ">
@@ -242,13 +250,14 @@ function Profile() {
                     Kamu belum mempunyai produk apapun
                   </p>
 
-                  <div className="p-1 mb-2 mx-[15px] border border-green-400 text-center rounded-lg cursor-pointer font-semibold hover:bg-green-500 hover:text-slate-100">
-                    <Link
-                      to={`/create/pr`}
-                      className=" bg-transparen font-semibold "
-                    >
+                  <div
+                    onClick={() => document.getElementById("go1").click()}
+                    className="w-[700px]  p-1 mb-[15px]  border border-green-400 text-center rounded-lg cursor-pointer font-semibold hover:bg-green-500 hover:text-slate-100"
+                  >
+                    <a href="/create/pr" className="" id="go1">
+                      {" "}
                       Tambah produk
-                    </Link>
+                    </a>
                   </div>
                 </div>
               </>
@@ -261,3 +270,37 @@ function Profile() {
 }
 
 export default Profile;
+
+{
+  /* start item */
+}
+{
+  /* {myProduct.data &&
+                      myProduct.data.map((item) => {
+                        return (
+                          <div key={item.id} className="flex gap-4 bg-blacks outline">
+                            <div className=" ">
+                              <div className="m-2 p-1 outline h-[150px] overflow-hidden">
+                                 <ImageSlider itemID={item.id} />   
+                              </div>
+                              <br />
+                              <h2 className="text-2xl md:text-xl m-1">
+                                {item.name}
+                              </h2>
+                              <p className="text-md font-medium m-1">
+                                {" "}
+                                Rp.{item.price}
+                              </p>
+                              <div className="my-4 text-center border border-green-400 rounded-lg mx-[5px] hover:bg-green-500 hover:text-slate-100">
+                                <Link
+                                  to={`/p/${item.name}`}
+                                  className="my-5  p-2 bg-transparen font-semibold "
+                                >
+                                  Edit
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })} */
+}
